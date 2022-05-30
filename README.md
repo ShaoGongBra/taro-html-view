@@ -1,16 +1,17 @@
-# Taro RichText
+# Taro HtmlView
 支持将简单的html富文本渲染为Taro组件，支持小程序、H5、ReactNative
 
 ## 安装
 
 ```bash
-yarn add taro-react-native
+yarn add taro-html-view
 ```
 
 ## 使用
 
 ```jsx
-<RichText html='<p>文本内容</p>' />
+import { HtmlView } from 'taro-html-view'
+<HtmlView html='<p>文本内容</p>' />
 ```
 
 ## 属性
