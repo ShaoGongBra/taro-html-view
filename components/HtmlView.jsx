@@ -137,6 +137,7 @@ export default function HtmlView({
 
   return <Create nodes={nodes} />
 }
+
 const getNodes = (() => {
   const nodeArr = {
     span: 'Text',
@@ -244,6 +245,9 @@ const getNodes = (() => {
         }
       },
       chars(text) {
+        if (text === '\n' || text === '\n\r') {
+          return
+        }
         text = text.replace(/&nbsp;/g, ' ')
         if (bufArray.length === 0) {
           results.child.push(text);
