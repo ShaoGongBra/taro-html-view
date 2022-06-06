@@ -52,9 +52,8 @@
 }
 
 .html-img {
-  width: 750px;
+  max-width: 750px;
 }
 .html-video {
-  width: 750px;
-  height: 422px;
+  max-width: 750px;
 }

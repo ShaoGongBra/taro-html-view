@@ -4,10 +4,12 @@ import { Component } from 'react'
 type props = Partial<{
   /** html文本 */
   html: string,
-  /**
-   * 组件样式 应用在最外层
-   */
+  /** 组件样式 应用在最外层 */
   style?: CSSProperties,
+  /** className */
+  className?: string
+  /** 是否开启图片预览 */
+  previewImage?: boolean
 }>
 
 /**

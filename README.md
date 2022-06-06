@@ -19,7 +19,9 @@ import { HtmlView } from 'taro-html-view'
 |  属性   | 类型  | 说明 |
 |  ----  | ----  | ----  |
 | html  | string | 用于渲染的HTML |
+| previewImage  | boolean | 开启图片预览功能 |
 | style  | CSSProperties | 用于组件最外层的样式 |
+| className  | string | class |
 
 ## 说明
 - 支持小程序、H5、ReactNative

@@ -1,21 +1,30 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { getKey } from 'taro-tools'
 import Taro from '@tarojs/taro'
 import { View as TaroView, Text, Image as TaroImage, Video as TaroVideo } from '@tarojs/components'
 import { HTMLParser } from '../utils/htmlparser'
+import tags from '../utils/tags.json'
 import './HtmlView.css'
 
-const Image = ({ style, className, src }) => {
+const Image = ({ style, className, src, containerLayout, onClick }) => {
+
+  const click = useCallback(() => {
+    onClick?.({
+      type: 'image',
+      src
+    })
+  }, [onClick])
 
   return <TaroImage
-    style={style}
+    style={[{ width: containerLayout.width + (process.env.TARO_ENV === 'rn' ? 0 : 'px') }, style]}
     className={className}
     src={src}
     mode='widthFix'
+    onClick={click}
   />
 }
 
-const Video = ({ style, className, src, controls, children }) => {
+const Video = ({ style, className, src, controls, containerLayout, children }) => {
 
   const [childSrc, setChildSrc] = useState('')
 
@@ -31,7 +40,10 @@ const Video = ({ style, className, src, controls, children }) => {
 
   return isPlay ?
     <TaroVideo
-      style={style}
+      style={[{
+        width: containerLayout.width + (process.env.TARO_ENV === 'rn' ? 0 : 'px'),
+        // height: containerLayout.width * 9 / 16 + (process.env.TARO_ENV === 'rn' ? 0 : 'px')
+      }, style]}
       className={className}
       controls={!!controls}
       src={childSrc || src}
@@ -98,44 +110,123 @@ const Item = ({
   nodeName,
   child,
   children,
+  containerLayout,
+  onClick,
   ...props
 }) => {
   const Comp = useMemo(() => comps[nodeName] || comps.View, [nodeName])
-  return <Comp {...props}>
+  return <Comp containerLayout={containerLayout} onClick={onClick} {...props}>
     {
       child?.map(item => {
         if (typeof item === 'string') {
           return item
         }
-        return <Item key={item.key} {...item} />
+        return <Item key={item.key} {...item} onClick={onClick} containerLayout={containerLayout} />
       })
     }
   </Comp>
 }
 
-const Create = ({ nodes, ...props }) => {
+const Create = ({ nodes, containerLayout, onClick, ...props }) => {
   return <View {...props}>
     {
       nodes?.map(item => {
         if (typeof item === 'string') {
           return item
         }
-        return <Item key={item.key} {...item} />
+        return <Item key={item.key} {...item} onClick={onClick} containerLayout={containerLayout} />
       })
     }
   </View>
 }
 
+const getRect = (select, getAll, num = 0) => {
+  const query = Taro.createSelectorQuery()
+  return new Promise((resolve, reject) => {
+    if (num > 10) {
+      reject('请求超过10次')
+      return
+    }
+    let isRes = false
+    query[getAll ? 'selectAll' : 'select'](select).boundingClientRect(res => {
+      if (isRes) {
+        return
+      }
+      isRes = true
+      if ((!Array.isArray(res) && res) || Array.isArray(res) && res.length > 0) {
+        resolve(res)
+      } else {
+        setTimeout(() => getRect(select, getAll, num + 1).then(resolve).catch(reject), 5)
+      }
+    }).exec()
+  })
+}
+
+let layoutKey = 1
+/**
+ * 获取组件的布局尺寸信息
+ * @param {*} param0
+ * @returns
+ */
+const Layout = ({ children, onLayout, className, ...props }) => {
+
+  const currentClass = useMemo(() => process.env.TARO_ENV === 'rn' ? '' : `layout-measure-${layoutKey++}`, [])
+
+  useEffect(() => {
+    if (process.env.TARO_ENV !== 'rn') {
+      getRect('.' + currentClass).then(onLayout)
+    }
+  }, [currentClass, onLayout])
+
+  const layout = useCallback(({ nativeEvent: { layout } }) => {
+    onLayout?.({
+      ...layout,
+      left: layout.x,
+      top: layout.y
+    })
+  }, [onLayout])
+
+  return <TaroView onLayout={layout} className={`${className} ${currentClass}`} {...props}>
+    {children}
+  </TaroView>
+}
+
 export default function HtmlView({
-  html
+  html,
+  style,
+  className,
+  previewImage
 }) {
   const [nodes, setNodes] = useState([])
 
+  const images = useRef([])
+
+  const [containerLayout, setContainerLayout] = useState({
+    width: 375
+  })
+
   useEffect(() => {
-    setNodes(getNodes(html))
+    const { nodes, images: imgs } = getNodes(html)
+    setNodes(nodes)
+    images.current = imgs
   }, [html])
 
-  return <Create nodes={nodes} />
+  const layout = useCallback((e) => {
+    setContainerLayout(e)
+  }, [])
+
+  const click = useCallback(e => {
+    if (e.type === 'image' && previewImage) {
+      Taro.previewImage({
+        current: e.src,
+        urls: images.current
+      })
+    }
+  }, [previewImage])
+
+  return <Layout onLayout={layout} style={style} className={className}>
+    <Create nodes={nodes} containerLayout={containerLayout} onClick={click} />
+  </Layout>
 }
 
 const getNodes = (() => {
@@ -221,6 +312,9 @@ const getNodes = (() => {
     return data
   }
   return html => {
+
+    const images = []
+
     const bufArray = []
     const results = {
       child: []
@@ -230,6 +324,9 @@ const getNodes = (() => {
         const node = {
           ...getAttrs(tag, attrs),
           key: getKey()
+        }
+        if (node.nodeName === 'Image' && node.src) {
+          images.push(node.src)
         }
         if (unary) {
           // if this tag dosen't have end tag
@@ -248,7 +345,7 @@ const getNodes = (() => {
         if (text === '\n' || text === '\n\r') {
           return
         }
-        text = text.replace(/&nbsp;/g, ' ')
+        text = text.replace(/&([a-z]{1,});/g, (a, b) => tags[b] || a)
         if (bufArray.length === 0) {
           results.child.push(text);
         } else {
@@ -277,7 +374,9 @@ const getNodes = (() => {
         console.log('comment', text)
       }
     })
-    return results.child
+    return {
+      nodes: results.child,
+      images
+    }
   }
-
 })();
