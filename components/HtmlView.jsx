@@ -81,7 +81,7 @@ const View = ({
   className
 }) => {
   const [viewStyle, textStyle] = getTextStyle(style)
-  // 判断内容是否是纯文本
+  // 判断内容是否是纯文本 或者是否是 文本组件
   const isText = children?.every?.(item => typeof item === 'string')
   // 是否是纯文本组件
   const isTextComp = !isText && children?.every?.(item => item?.props?.nodeName === 'Text')
@@ -231,10 +231,12 @@ export default function HtmlView({
 
 const getNodes = (() => {
   const nodeArr = {
-    span: 'Text',
     img: 'Image',
     video: 'Video'
   }
+  'span,font,b,strong,i,em,u,sup,sub,h1,h2,h3,h4,h5,h6,font,q,s,strike,del,big,small'.split(',').forEach(key => {
+    nodeArr[key] = 'Text'
+  })
   /**
    * 定义节点支持的style
    */

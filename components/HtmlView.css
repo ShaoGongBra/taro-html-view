@@ -44,11 +44,21 @@
 .html-b {
   font-weight: bold;
 }
+.html-i,
 .html-em {
   font-style: italic;
 }
+.html-u {
+  text-decoration: underline;
+}
+.html-b,
 .html-strong {
   font-weight: bold;
+}
+.html-del,
+.html-s,
+.html-strike {
+  text-decoration: line-through;
 }
 
 .html-img {
