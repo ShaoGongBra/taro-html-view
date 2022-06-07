@@ -255,6 +255,9 @@ const getNodes = (() => {
   // 不支持的Style属性
   const noStyleValue = ['auto']
 
+  // tag替换正则
+  const tagReg = /&([a-zA-Z0-9]{1,});/g
+
   const getStyleValue = (name, value) => {
     if (value?.endsWith('px')) {
       return Taro.pxTransform(value.replace('px', '') * 2)
@@ -345,7 +348,7 @@ const getNodes = (() => {
         if (text === '\n' || text === '\n\r') {
           return
         }
-        text = text.replace(/&([a-z]{1,});/g, (a, b) => tags[b] || a)
+        text = text.replace(tagReg, (a, b) => tags[b] || a)
         if (bufArray.length === 0) {
           results.child.push(text);
         } else {
