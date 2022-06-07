@@ -16,7 +16,7 @@ const Image = ({ style, className, src, containerLayout, onClick }) => {
   }, [onClick])
 
   return <TaroImage
-    style={[{ width: containerLayout.width + (process.env.TARO_ENV === 'rn' ? 0 : 'px') }, style]}
+    style={{ width: containerLayout.width + (process.env.TARO_ENV === 'rn' ? 0 : 'px'), ...style }}
     className={className}
     src={src}
     mode='widthFix'
@@ -40,10 +40,11 @@ const Video = ({ style, className, src, controls, containerLayout, children }) =
 
   return isPlay ?
     <TaroVideo
-      style={[{
+      style={{
         width: containerLayout.width + (process.env.TARO_ENV === 'rn' ? 0 : 'px'),
-        // height: containerLayout.width * 9 / 16 + (process.env.TARO_ENV === 'rn' ? 0 : 'px')
-      }, style]}
+        height: containerLayout.width * 9 / 16 + (process.env.TARO_ENV === 'rn' ? 0 : 'px'),
+        ...style
+      }}
       className={className}
       controls={!!controls}
       src={childSrc || src}
