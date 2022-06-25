@@ -14,7 +14,7 @@ const Image = ({ style, className, src, containerLayout, onClick }) => {
       src
     })
   }, [onClick])
-
+  
   return <TaroImage
     style={{ width: containerLayout.width + (process.env.TARO_ENV === 'rn' ? 0 : 'px'), ...style }}
     className={className}
@@ -169,7 +169,7 @@ let layoutKey = 1
  * @param {*} param0
  * @returns
  */
-const Layout = ({ children, onLayout, className, ...props }) => {
+const Layout = ({ children, onLayout, className, style, ...props }) => {
 
   const currentClass = useMemo(() => process.env.TARO_ENV === 'rn' ? '' : `layout-measure-${layoutKey++}`, [])
 
@@ -187,7 +187,7 @@ const Layout = ({ children, onLayout, className, ...props }) => {
     })
   }, [onLayout])
 
-  return <TaroView onLayout={layout} className={`${className} ${currentClass}`} {...props}>
+  return <TaroView onLayout={layout} className={`${className} ${currentClass}`} style={style} {...props}>
     {children}
   </TaroView>
 }
@@ -198,6 +198,7 @@ export default function HtmlView({
   className,
   previewImage
 }) {
+
   const [nodes, setNodes] = useState([])
 
   const images = useRef([])
@@ -256,7 +257,7 @@ const getNodes = (() => {
     ['textDecorationLine'],
   ]
   // 不支持的Style属性
-  const noStyleValue = ['auto']
+  const noStyleValue = ['auto', 'normal']
 
   // tag替换正则
   const tagReg = /&([a-zA-Z0-9]{1,});/g
