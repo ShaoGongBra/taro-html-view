@@ -1,4 +1,4 @@
-# Taro HtmlView
+# Taro HTML View
 支持将简单的html富文本渲染为Taro组件，支持小程序、H5、ReactNative
 
 ## 安装
@@ -11,6 +11,7 @@ yarn add taro-html-view
 
 ```jsx
 import { HtmlView } from 'taro-html-view'
+
 <HtmlView html='<p>文本内容</p>' />
 ```
 

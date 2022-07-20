@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, cloneElement } from 'react'
 import { getKey } from 'taro-tools'
 import Taro from '@tarojs/taro'
-import { View as TaroView, Text, Image as TaroImage, Video as TaroVideo } from '@tarojs/components'
+import { View as TaroView, Text as TaroText, Image as TaroImage, Video as TaroVideo } from '@tarojs/components'
 import { HTMLParser } from '../utils/htmlparser'
 import tags from '../utils/tags.json'
 import './HtmlView.css'
@@ -14,7 +14,7 @@ const Image = ({ style, className, src, containerLayout, onClick }) => {
       src
     })
   }, [onClick])
-  
+
   return <TaroImage
     style={{ width: containerLayout.width + (process.env.TARO_ENV === 'rn' ? 0 : 'px'), ...style }}
     className={className}
@@ -81,22 +81,66 @@ const View = ({
   style = {},
   className
 }) => {
-  const [viewStyle, textStyle] = getTextStyle(style)
+  const [viewStyle, textStyle] = useMemo(() => getTextStyle(style), [style])
   // 判断内容是否是纯文本 或者是否是 文本组件
-  const isText = children?.every?.(item => typeof item === 'string')
+  const isText = useMemo(() => children?.every?.(item => typeof item === 'string'), [children])
   // 是否是纯文本组件
-  const isTextComp = !isText && children?.every?.(item => item?.props?.nodeName === 'Text')
+  const isTextComp = useMemo(() => !isText && children?.every?.(item => item?.props?.nodeName === 'Text'), [isText, children])
 
   return isText ?
-    <Text style={viewStyle} className={className}>{children.join('')}</Text> : isTextComp ?
-      <Text style={textStyle} className={className}>{children}</Text> :
-      <TaroView style={viewStyle} className={className}>{
+    <TextPlatform style={viewStyle} className={className}>{children.join('')}</TextPlatform> :
+    isTextComp ?
+      <TextPlatform style={textStyle} className={className}>{children}</TextPlatform> :
+      <TaroView style={viewStyle} className={className}>
+        {
+          children?.map?.((item, index) => {
+            return typeof item === 'string' ?
+              <TextPlatform key={index} style={textStyle}>{item}</TextPlatform> :
+              item
+          }) || children
+        }
+      </TaroView>
+}
+
+const TextPlatform = ({
+  children,
+  style,
+  className
+}) => {
+  if (!children) {
+    return null
+  }
+  return process.env.TARO_ENV === 'weapp' ?
+    <TaroView className={`html-text ${className || ''}`} style={style}>
+      {children}
+    </TaroView> :
+    <TaroText className={className} style={style}>
+      {children}
+    </TaroText>
+}
+
+const Text = ({
+  children,
+  style = {},
+  childOther,
+  className
+}) => {
+  // 如果子元素里面是纯文本就是组件形式渲染，否则省略当前层级然他正常渲染
+  return !childOther ?
+    <TextPlatform style={style} className={className}>
+      {
         children?.map?.((item, index) => {
           return typeof item === 'string' ?
-            <Text key={index} style={textStyle}>{item}</Text> :
+            <TextPlatform style={style} className={className} key={index}>{item}</TextPlatform> :
             item
         }) || children
-      }</TaroView>
+      }
+    </TextPlatform> :
+    (children?.map?.((item, index) => {
+      return typeof item === 'string' ?
+        <TextPlatform style={style} className={className} key={index}>{item}</TextPlatform> :
+        cloneElement(item, { style: { ...item.props.style, ...style }, className: `${item.props.className || ''} ${className || ''}` })
+    }) || children)
 
 }
 
@@ -244,9 +288,9 @@ const getNodes = (() => {
    */
   const styleNode = {
     // 布局组件通用
-    View: ['width', 'height', 'maxHeight', 'maxWidth', 'minHeight', 'minWidth', 'opacity', 'backgroundColor', 'overflow', 'padding', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'margin', 'marginLeft', 'marginRight', 'marginTop', 'marginBottom', 'borderStyle', 'borderWidth', 'borderLeftWidth', 'borderRightWidth', 'borderTopWidth', 'borderBottomWidth', 'borderColor', 'borderLeftColor', 'borderRightColor', 'borderTopColor', 'borderBottomColor', 'borderRadius', 'borderTopLeftRadius', 'borderTopRightRadius', 'borderBottomLeftRadius', 'borderBottomRightRadius', 'position', 'left', 'right', 'top', 'bottom', 'zIndex', 'flexDirection', 'flexWrap', 'alignItems', 'justifyContent', 'alignContent', 'flex', 'flexGrow', 'flexShrink', 'alignSelf'],
+    View: ['width', 'height', 'maxHeight', 'maxWidth', 'minHeight', 'minWidth', 'opacity', 'backgroundColor', 'overflow', 'padding', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'margin', 'marginLeft', 'marginRight', 'marginTop', 'marginBottom', 'borderStyle', 'borderWidth', 'borderLeftWidth', 'borderRightWidth', 'borderTopWidth', 'borderBottomWidth', 'borderColor', 'borderLeftColor', 'borderRightColor', 'borderTopColor', 'borderBottomColor', 'borderRadius', 'borderTopLeftRadius', 'borderTopRightRadius', 'borderBottomLeftRadius', 'borderBottomRightRadius', 'position', 'left', 'right', 'top', 'bottom', 'zIndex', 'flexDirection', 'flexWrap', 'alignItems', 'justifyContent', 'alignContent', 'flex', 'flexGrow', 'flexShrink', 'alignSelf', 'color', 'fontSize', 'lineHeight', 'fontWeight', 'fontFamily', 'fontStyle', 'letterSpacing', 'textAlign', 'textDecorationLine', 'textTransform', 'textIndent'],
     // 文本 输入框类组件通用
-    Text: ['width', 'height', 'maxHeight', 'maxWidth', 'minHeight', 'minWidth', 'opacity', 'backgroundColor', 'overflow', 'padding', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'margin', 'marginLeft', 'marginRight', 'marginTop', 'marginBottom', 'borderStyle', 'borderWidth', 'borderLeftWidth', 'borderRightWidth', 'borderTopWidth', 'borderBottomWidth', 'borderColor', 'borderLeftColor', 'borderRightColor', 'borderTopColor', 'borderBottomColor', 'position', 'left', 'right', 'top', 'bottom', 'zIndex', 'color', 'fontSize', 'lineHeight', 'fontWeight', 'fontFamily', 'fontStyle', 'letterSpacing', 'textAlign', 'textDecorationLine', 'textTransform', 'flex', 'flexGrow', 'flexShrink', 'alignSelf'],
+    Text: ['width', 'height', 'maxHeight', 'maxWidth', 'minHeight', 'minWidth', 'opacity', 'backgroundColor', 'overflow', 'padding', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'margin', 'marginLeft', 'marginRight', 'marginTop', 'marginBottom', 'borderStyle', 'borderWidth', 'borderLeftWidth', 'borderRightWidth', 'borderTopWidth', 'borderBottomWidth', 'borderColor', 'borderLeftColor', 'borderRightColor', 'borderTopColor', 'borderBottomColor', 'position', 'left', 'right', 'top', 'bottom', 'zIndex', 'color', 'fontSize', 'lineHeight', 'fontWeight', 'fontFamily', 'fontStyle', 'letterSpacing', 'textAlign', 'textDecorationLine', 'textTransform', 'textIndent', 'flex', 'flexGrow', 'flexShrink', 'alignSelf'],
     // 图片专用
     Image: ['width', 'height', 'maxHeight', 'maxWidth', 'minHeight', 'minWidth', 'opacity', 'backgroundColor', 'overflow', 'margin', 'marginLeft', 'marginRight', 'marginTop', 'marginBottom', 'borderStyle', 'borderWidth', 'borderLeftWidth', 'borderRightWidth', 'borderTopWidth', 'borderBottomWidth', 'borderColor', 'borderLeftColor', 'borderRightColor', 'borderTopColor', 'borderBottomColor', 'position', 'left', 'right', 'top', 'bottom', 'zIndex', 'flex', 'flexGrow', 'flexShrink', 'alignSelf'],
     Video: ['width', 'height', 'backgroundColor', 'margin', 'marginLeft', 'marginRight', 'marginTop', 'marginBottom']
@@ -262,13 +306,36 @@ const getNodes = (() => {
   // tag替换正则
   const tagReg = /&([a-zA-Z0-9]{1,});/g
 
-  const getStyleValue = (name, value) => {
+  // 空字符过滤
+  const emptyTexts = ['\r', '\n', '\r\n', '↵']
+
+  // 转换尺寸单位
+  const getSize = value => {
     if (value?.endsWith('px')) {
       return Taro.pxTransform(value.replace('px', '') * 2)
     } else if (value?.endsWith('pt')) {
       return Taro.pxTransform(value.replace('pt', '') * 2 * 1.33333)
+    } else if (value?.endsWith('rem')) {
+      return Taro.pxTransform(value.replace('rem', '') * 32)
+    } else if (value?.endsWith('em')) {
+      return Taro.pxTransform(value.replace('em', '') * 32)
     }
-    return value
+    return false
+  }
+
+  // 转换样式
+  const getStyleValue = (name, value) => {
+    const size = getSize(value)
+    if (size !== false) {
+      return [name, size]
+    }
+    if (name === 'lineHeight') {
+      // rn不支持倍数行高
+      return false
+    } else if (name === 'zIndex') {
+      return [name, +value]
+    }
+    return [name, value]
   }
   const getAttrs = (tag, attrs) => {
 
@@ -302,10 +369,7 @@ const getNodes = (() => {
             if (!styleNode[data.nodeName].includes(styleName)) {
               return false
             }
-            return [
-              styleName,
-              getStyleValue(styleName, arr[1])
-            ]
+            return getStyleValue(styleName, arr[1])
           }).filter(v => v)
           data.style = Object.fromEntries(res)
           break
@@ -343,38 +407,41 @@ const getNodes = (() => {
           if (parent.child === undefined) {
             parent.child = [];
           }
-          parent.child.push(node);
+          parent.child.push(node)
         } else {
-          bufArray.unshift(node);
+          bufArray.unshift(node)
         }
       },
       chars(text) {
-        if (text === '\n' || text === '\n\r') {
+        if (emptyTexts.includes(text)) {
           return
         }
         text = text.replace(tagReg, (a, b) => tags[b] || a)
         if (bufArray.length === 0) {
-          results.child.push(text);
+          results.child.push(text)
         } else {
           const parent = bufArray[0];
           if (parent.child === undefined) {
-            parent.child = [];
+            parent.child = []
           }
-          parent.child.push(text);
+          parent.child.push(text)
         }
       },
       end(tag) {
-        const node = bufArray.shift();
+        const node = bufArray.shift()
         // if (node.tag !== tag) console.error('invalid state: mismatch end tag');
-
+        //判断子元素中是否存在不属于文本的元素
+        if (node.nodeName === 'Text' && node.child?.some(v => !(typeof v === 'string' || v.nodeName === 'Text') || v.childOther)) {
+          node.childOther = true
+        }
         if (bufArray.length === 0) {
-          results.child.push(node);
+          results.child.push(node)
         } else {
-          var parent = bufArray[0];
+          var parent = bufArray[0]
           if (parent.child === undefined) {
-            parent.child = [];
+            parent.child = []
           }
-          parent.child.push(node);
+          parent.child.push(node)
         }
       },
       comment(text) {

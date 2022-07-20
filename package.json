@@ -1,6 +1,6 @@
 {
   "name": "taro-html-view",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "支持渲染由富文本编辑器编辑的html文本内容，支持小程序、h5、ReactNative，复杂的内容可能并不能正确渲染",
   "main": "index.js",
   "author": "908634674@qq.com",

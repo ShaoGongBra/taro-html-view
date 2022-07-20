@@ -37,7 +37,11 @@
   margin: 32px 0;
 }
 .html-p {
-  margin: 32px 0;
+  /*postcss-pxtransform rn eject enable*/
+  display: block;
+  /*postcss-pxtransform rn eject disable*/
+  margin-top: 16px;
+  margin-bottom: 16px;
   flex-direction: row;
   flex-wrap: wrap;
 }
@@ -60,6 +64,18 @@
 .html-strike {
   text-decoration: line-through;
 }
+.html-br {
+  /*postcss-pxtransform rn eject enable*/
+  display: block;
+  /*postcss-pxtransform rn eject disable*/
+  height: 32px;
+}
+
+/*postcss-pxtransform rn eject enable*/
+.html-text {
+  display: inline;
+}
+/*postcss-pxtransform rn eject disable*/
 
 .html-img {
   max-width: 750px;
