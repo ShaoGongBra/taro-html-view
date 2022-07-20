@@ -29,3 +29,8 @@ import { HtmlView } from 'taro-html-view'
 - 只支持在Taro3上使用
 - 支持在小程序上渲染视频
 - 此组件的目的是渲染后台编辑器生成的内容，复杂或者ReactNative不支持的样式将不会被渲染
+
+## 已知问题
+- rn不支持 `line-height: 1.5;` 这样的倍数行距
+- 对em的单位转换不完善
+- rn不支持 `text-indent` 首行缩进
