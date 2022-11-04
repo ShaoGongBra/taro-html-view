@@ -52,6 +52,13 @@ const Video = ({ style, className, src, controls, containerLayout, children }) =
     : null
 }
 
+const Audio = ({ src, autoplay, loop }) => {
+
+  return <TaroView className='html-audio'>
+
+  </TaroView>
+}
+
 const getTextStyle = (allStyle = {}) => {
   const textStyles = ['opacity', 'backgroundColor', 'color', 'fontSize', 'lineHeight', 'fontWeight', 'fontFamily', 'fontStyle', 'letterSpacing', 'textAlign', 'textDecorationLine', 'textTransform']
   const style = {}
@@ -252,9 +259,13 @@ export default function HtmlView({
   })
 
   useEffect(() => {
-    const { nodes, images: imgs } = getNodes(html)
-    setNodes(nodes)
-    images.current = imgs
+    try {
+      const { nodes, images: imgs } = getNodes(html)
+      setNodes(nodes)
+      images.current = imgs
+    } catch (error) {
+      console.error('html解析失败', error)
+    }
   }, [html])
 
   const layout = useCallback((e) => {
