@@ -21,6 +21,7 @@ import { HtmlView } from 'taro-html-view'
 |  ----  | ----  | ----  |
 | html  | string | 用于渲染的HTML |
 | previewImage  | boolean | 开启图片预览功能 |
+| onLinkClick  | function | 点击链接时回调，参数为 href 指向的地址 |
 | style  | CSSProperties | 用于组件最外层的样式 |
 | className  | string | class |
 
