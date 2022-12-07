@@ -96,14 +96,14 @@ const View = ({
   // 是否是纯文本组件
   const isTextComp = useMemo(() => !isText && children?.every?.(item => item?.props?.nodeName === 'Text'), [isText, children])
 
-  //console.log('View', href, isText);
+  // console.log('View', props, isText);
   return isText ? (
       <TextPlatform
         style={viewStyle}
         className={className}
         onClick={() => {
           // 一般 a 链接才有这个
-          if (props.href && isText) {
+          if (props.href) {
             onClick({ type: 'link', ...props });
           }
         }}
@@ -113,7 +113,16 @@ const View = ({
     ) :
     isTextComp ?
       <TextPlatform style={textStyle} className={className}>{children}</TextPlatform> :
-      <TaroView style={viewStyle} className={className}>
+      <TaroView
+        style={viewStyle}
+        className={className}
+        onClick={() => {
+          // 一般 a 链接才有这个
+          if (props.href) {
+            onClick({ type: 'link', ...props });
+          }
+        }}
+      >
         {
           children?.map?.((item, index) => {
             return typeof item === 'string' ?
@@ -279,7 +288,7 @@ export default function HtmlView({
     try {
       const { nodes, images: imgs } = getNodes(html)
       setNodes(nodes)
-      console.log('nodes', nodes);
+      // console.log('nodes', nodes);
       images.current = imgs
     } catch (error) {
       console.error('html解析失败', error)
