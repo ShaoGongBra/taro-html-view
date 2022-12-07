@@ -86,7 +86,9 @@ const getTextStyle = (allStyle = {}) => {
 const View = ({
   children,
   style = {},
-  className
+  className,
+  onClick,
+  ...props
 }) => {
   const [viewStyle, textStyle] = useMemo(() => getTextStyle(style), [style])
   // 判断内容是否是纯文本 或者是否是 文本组件
@@ -94,8 +96,21 @@ const View = ({
   // 是否是纯文本组件
   const isTextComp = useMemo(() => !isText && children?.every?.(item => item?.props?.nodeName === 'Text'), [isText, children])
 
-  return isText ?
-    <TextPlatform style={viewStyle} className={className}>{children.join('')}</TextPlatform> :
+  //console.log('View', href, isText);
+  return isText ? (
+      <TextPlatform
+        style={viewStyle}
+        className={className}
+        onClick={() => {
+          // 一般 a 链接才有这个
+          if (props.href && isText) {
+            onClick({ type: 'link', ...props });
+          }
+        }}
+      >
+        {children.join('')}
+      </TextPlatform>
+    ) :
     isTextComp ?
       <TextPlatform style={textStyle} className={className}>{children}</TextPlatform> :
       <TaroView style={viewStyle} className={className}>
@@ -112,16 +127,17 @@ const View = ({
 const TextPlatform = ({
   children,
   style,
-  className
+  className,
+  ...props
 }) => {
   if (!children) {
     return null
   }
   return process.env.TARO_ENV === 'weapp' ?
-    <TaroView className={`html-text ${className || ''}`} style={style}>
+    <TaroView className={`html-text ${className || ''}`} style={style} {...props}>
       {children}
     </TaroView> :
-    <TaroText className={className} style={style}>
+    <TaroText className={className} style={style} {...props}>
       {children}
     </TaroText>
 }
@@ -247,7 +263,8 @@ export default function HtmlView({
   html,
   style,
   className,
-  previewImage
+  previewImage,
+  onLinkClick
 }) {
 
   const [nodes, setNodes] = useState([])
@@ -262,6 +279,7 @@ export default function HtmlView({
     try {
       const { nodes, images: imgs } = getNodes(html)
       setNodes(nodes)
+      console.log('nodes', nodes);
       images.current = imgs
     } catch (error) {
       console.error('html解析失败', error)
@@ -273,13 +291,17 @@ export default function HtmlView({
   }, [])
 
   const click = useCallback(e => {
+    //console.log('click', e);
     if (e.type === 'image' && previewImage) {
       Taro.previewImage({
         current: e.src,
         urls: images.current
       })
     }
-  }, [previewImage])
+    if (e.type === 'link' && onLinkClick) {
+      onLinkClick(e.href);
+    }
+  }, [nodes])
 
   return <Layout onLayout={layout} style={style} className={className}>
     <Create nodes={nodes} containerLayout={containerLayout} onClick={click} />
