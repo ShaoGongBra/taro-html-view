@@ -10,6 +10,8 @@ type props = Partial<{
   className?: string
   /** 是否开启图片预览 */
   previewImage?: boolean
+  /** 点击带有href的标签的回调 */
+  onLinkClick?: (href: string) => void
 }>
 
 /**

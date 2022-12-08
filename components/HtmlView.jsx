@@ -96,7 +96,6 @@ const View = ({
   // 是否是纯文本组件
   const isTextComp = useMemo(() => !isText && children?.every?.(item => item?.props?.nodeName === 'Text'), [isText, children])
 
-  // console.log('View', props, isText);
   return isText ? (
       <TextPlatform
         style={viewStyle}
@@ -288,7 +287,6 @@ export default function HtmlView({
     try {
       const { nodes, images: imgs } = getNodes(html)
       setNodes(nodes)
-      // console.log('nodes', nodes);
       images.current = imgs
     } catch (error) {
       console.error('html解析失败', error)
